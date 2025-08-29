@@ -9,6 +9,9 @@ from threading import Thread
 import queue
 import uuid
 
+#CTRL + S | settings
+#ESC | exit
+
 # Color scheme: Dark futuristic with neon accents
 DRIVE_COLOR = "#00FF9F"
 DISK_COLOR = "#1E90FF"
@@ -86,19 +89,21 @@ class SettingsPanel(tk.Toplevel):
         super().__init__(master)
         self.master = master
         self.title("Settings")
-        self.geometry("1920x1080")
+        self.geometry("400x900")
         self.configure(bg=BACKGROUND_COLOR)
 
         style = ttk.Style(self)
         style.configure("TScale", background=BACKGROUND_COLOR, foreground="white", troughcolor=LINE_COLOR)
         style.configure("TLabel", background=BACKGROUND_COLOR, foreground="white", font=("Roboto Mono", 10))
 
+        # Parent node height sliders
         self.create_slider("CPU Y Position", "parent_y_positions", 0, 1080, key='cpu')
         self.create_slider("Drives Y Position", "parent_y_positions", 0, 1080, key='drives')
         self.create_slider("GPU Y Position", "parent_y_positions", 0, 1080, key='gpu')
         self.create_slider("Network Y Position", "parent_y_positions", 0, 1080, key='network')
         self.create_slider("FileSystem Y Position", "parent_y_positions", 0, 1080, key='filesystem')
         
+        # Existing sliders
         self.create_slider("Spacing", "spacing", 0, 200)
         self.create_slider("CPU Spacing", "parent_child_spacings", 0, 300, key='cpu')
         self.create_slider("Drives Spacing", "parent_child_spacings", 0, 300, key='drives')
@@ -233,8 +238,7 @@ class DesktopWidget(tk.Tk):
                             usage = psutil.disk_usage(partition.mountpoint)
                             data[partition.mountpoint] = {
                                 'percent': usage.percent,
-                                'name': os.path.basename(partition.device),
-                                'drive_name': partition.mountpoint  # Store mountpoint as drive name
+                                'name': os.path.basename(partition.device)
                             }
                         except Exception:
                             continue
@@ -362,7 +366,7 @@ class DesktopWidget(tk.Tk):
         for partition in psutil.disk_partitions():
             if 'cdrom' in partition.opts or not partition.fstype or 'ro' in partition.opts:
                 continue
-            p = Particle(f"{partition.mountpoint} ({os.path.basename(partition.device)})", DISK_COLOR, CHILD_FONT,
+            p = Particle(os.path.basename(partition.device), DISK_COLOR, CHILD_FONT,
                          parent=parent_drive, data_key=partition.mountpoint, app=self)
             self.particles.append(p)
 
@@ -484,8 +488,7 @@ class DesktopWidget(tk.Tk):
             elif p.data_key and not p.is_gpu and not p.is_network and not p.is_filesystem and not p.is_cpu:
                 if p.data_key in data:
                     current_value = data[p.data_key]['percent']
-                    # Include drive name in the text
-                    p.text = f"{data[p.data_key]['drive_name']} {current_value:.0f}%"
+                    p.text = f"{data[p.data_key]['name']} {current_value:.0f}%"
             elif p.is_gpu and p.data_key in data:
                 current_value = data[p.data_key]['percent']
                 p.text = f"GPU{p.data_key[-1]} {current_value}%"
